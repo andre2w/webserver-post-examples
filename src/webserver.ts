@@ -17,7 +17,7 @@ const notFound = () => {
  * Executa um arquivo .js dentro do folder scripts e retorna o stdout
  * como o conteudo da pagina.
  * 
- * Executa usando node.exe porque estou usando o windows e o execFileSync funciona 
+ * Executa usando node.exe porque estou usando o windows e o execSync funciona 
  * através do cmd e não powershell 
  * @param scriptPath string
  * @returns Response
@@ -55,8 +55,7 @@ const loadPage = (filePath: string) => {
  */
 const serveFile: (filepath?: string) => Response = (filePath) => {
     if (filePath === undefined || filePath === "/") {
-        const index = fs.readFileSync(path.join(__dirname, "..", "pages", "index.html"));
-        return { status: 200, content: index };
+        return loadPage("index.html");
     }
 
     try {
