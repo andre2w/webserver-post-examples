@@ -17,9 +17,7 @@ export class LeastConnections implements Strategy {
     }
 
     getServer(): Backend {
-        console.log(`Escolhendo uma conexao`);
         const backend = this.pickLeastConnectedBackend();
-        console.log(`Backend utilizado ${JSON.stringify(backend)}`);
         this.connections.set(backend, this.connections.get(backend)! + 1);
         return backend;
     }
