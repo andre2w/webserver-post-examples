@@ -1,7 +1,7 @@
 import http from "http";
 import path from "path";
 import fs from "fs";
-import { execSync } from "child_process";
+import { exec } from "child_process";
 import { argv } from "process";
 
 interface Response {
@@ -23,9 +23,12 @@ class Webserver {
         const requestListener = (req: http.IncomingMessage, res: http.ServerResponse) => {
             console.log(`Webserver na porta ${this.props.port} recebeu request`);
 
-            const result = this.serveFile(req.url);
-            res.writeHead(result.status);
-            res.end(result.content);
+            const callback = (response: Response) => {
+                res.writeHead(response.status);
+                res.end(response.content);
+            }
+
+            const result = this.serveFile(callback, req.url!);
         };
 
         console.log(`Iniciando webserver na porta ${this.props.port}`);
@@ -41,21 +44,13 @@ class Webserver {
      * @param filePath 
      * @returns { status: number; content: Buffer }
      */
-    private serveFile(filePath?: string): Response {
+    private serveFile(callback: (response: Response) => void, filePath: string): void {
         if (filePath === undefined || filePath === "/") {
-            return this.loadPage("index.html");
-        }
-
-        try {
-
-            if (this.props.cgiBinMapping[filePath] !== undefined) {
-                return this.cgiBin(this.props.cgiBinMapping[filePath]);
-            } else {
-                return this.loadPage(filePath);
-            }
-
-        } catch {
-            return this.notFound();
+            this.loadPage("index.html", callback);
+        } else if (this.props.cgiBinMapping[filePath!] !== undefined) {
+            this.cgiBin(this.props.cgiBinMapping[filePath], callback);
+        } else {
+            this.loadPage(filePath, callback);
         }
     }
 
@@ -64,20 +59,21 @@ class Webserver {
      * @param filePath string
      * @returns Response
      */
-    private loadPage(filePath: string) {
+    private loadPage(filePath: string, callback: (response: Response) => void) {
         const parsedPath = filePath.split("/");
-        const content = fs.readFileSync(path.join(this.props.rootFolder, ...parsedPath));
-        return { status: 200, content };
+        fs.readFile(path.join(this.props.rootFolder, ...parsedPath), (err, data) => {
+            if (err) {
+                callback({ status: 500, content: Buffer.from("Alguma coisa errada não está correta") });
+            } else {
+                callback({ status: 200, content: data});
+            }
+        });
     }
 
-    private notFound() {
-        const notFound = fs.readFileSync(path.join(this.props.rootFolder, "404.html"));
-        return { status: 404, content: notFound }; 
-    }
-
-    private cgiBin(scriptPath: string) {
-        const result = execSync(`node.exe ${path.join(this.props.cgiBinRootFolder, scriptPath)}`);
-        return { status: 200, content: result }
+    private cgiBin(scriptPath: string, callback: (response: Response) => void) {
+        const result = exec(`node.exe ${path.join(this.props.cgiBinRootFolder, scriptPath)}`, (err, stdout) =>
+            callback({ status: 200, content: Buffer.from(stdout) })
+        );
     }
 }
 
