@@ -16,7 +16,6 @@ interface GetProps {
 export function get({ callback, ...requestOptions }: GetProps): void {
     let body = "";
 
-    console.log(requestOptions);
     http.get(requestOptions, (res) => {
         res.on('data', chunk => {
             body += chunk;

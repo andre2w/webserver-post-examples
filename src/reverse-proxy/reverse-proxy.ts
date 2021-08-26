@@ -1,5 +1,5 @@
 import http, { IncomingMessage } from "http";
-import { get, GetResultProps } from "./http-client";
+import { get, GetResultProps } from "../http-client";
 
 /**
  * Cria um mapeamento de uma rota para uma porta.
@@ -59,7 +59,7 @@ class ReverseProxy {
         };
 
         const server = http.createServer(requestListener);
-        server.listen(3031);
+        server.listen(this.port);
     }
 
     private makeRequest(route: Route, originalRequest: IncomingMessage, callback: (result: GetResultProps) => void) {
@@ -73,6 +73,6 @@ class ReverseProxy {
     }
 }
 
-new ReverseProxy(3031, [
-    { matcher: /^\/blog/, port: 3030 }
+new ReverseProxy(3030, [
+    { matcher: /^\/blog/, port: 3031 }
 ]).start();

@@ -10,6 +10,7 @@
   },
   "scripts": {
     "webserver": "ts-node src/webserver/webserver.ts",
-    "rp": "ts-node src/reverse-proxy/reverse-proxy.ts"
+    "rp": "ts-node src/reverse-proxy/reverse-proxy.ts",
+    "lb": "ts-node src/load-balancer/load-balancer.ts"
   }
 }

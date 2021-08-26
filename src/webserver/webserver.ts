@@ -2,6 +2,7 @@ import http from "http";
 import path from "path";
 import fs from "fs";
 import { execSync } from "child_process";
+import { argv } from "process";
 
 interface Response {
     status: number;
@@ -20,11 +21,14 @@ class Webserver {
 
     start() {
         const requestListener = (req: http.IncomingMessage, res: http.ServerResponse) => {
+            console.log(`Webserver na porta ${this.props.port} recebeu request`);
+
             const result = this.serveFile(req.url);
             res.writeHead(result.status);
             res.end(result.content);
         };
 
+        console.log(`Iniciando webserver na porta ${this.props.port}`);
         const server = http.createServer(requestListener);
         server.listen(this.props.port);
     }
@@ -77,12 +81,15 @@ class Webserver {
     }
 }
 
+const port = Number.isInteger(parseInt(argv[2])) ? parseInt(argv[2]) : 3031;
+
 const webserver = new Webserver({
-    port: 3030,
+    port,
     rootFolder: path.join(__dirname, "..", "..", "pages"),
     cgiBinRootFolder: path.join(__dirname, "..", "..", "scripts"),
     cgiBinMapping: {
-        "/cgi-bin": "cgi-bin-test.js"
+        "/cgi-bin": "cgi-bin-test.js",
+        "/sleep": "sleep.js"
     }
 });
 webserver.start();
