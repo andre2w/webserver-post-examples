@@ -1,23 +1,20 @@
 import http from "http";
 import path from "path";
-import fs from "fs";
-import { exec } from "child_process";
 import { argv } from "process";
+import { ServeFile, ServeFileProps, Response } from "./serve-file";
 
-interface Response {
-    status: number;
-    content: Buffer;
-}
-
-interface WebserverProps {
+export type WebserverProps = ServeFileProps & {
     port: number,
-    rootFolder: string,
-    cgiBinMapping: Record<string, string>,
-    cgiBinRootFolder: string
-}
+};
 
 class Webserver {
-    constructor(private readonly props: WebserverProps) {}
+    private readonly port: number;
+    private readonly serveFile: ServeFile;
+
+    constructor(private readonly props: WebserverProps) {
+        this.port = props.port;
+        this.serveFile = new ServeFile(props);
+    }
 
     start() {
         const requestListener = (req: http.IncomingMessage, res: http.ServerResponse) => {
@@ -28,52 +25,12 @@ class Webserver {
                 res.end(response.content);
             }
 
-            const result = this.serveFile(callback, req.url!);
+            this.serveFile.serveFile(callback, req.url!);
         };
 
         console.log(`Iniciando webserver na porta ${this.props.port}`);
         const server = http.createServer(requestListener);
         server.listen(this.props.port);
-    }
-
-    /**
-     * Esse metodo tenta ler um arquivo baseado na url passada
-     * se a url for /blog/posts/webserver.html ele vai tentar ler em um arquivo
-     * em ./pages/blog/posts/webserver.html caso não encontre ele vai retornar
-     * o conteudo de 404.html  
-     * @param filePath 
-     * @returns { status: number; content: Buffer }
-     */
-    private serveFile(callback: (response: Response) => void, filePath: string): void {
-        if (filePath === undefined || filePath === "/") {
-            this.loadPage("index.html", callback);
-        } else if (this.props.cgiBinMapping[filePath!] !== undefined) {
-            this.cgiBin(this.props.cgiBinMapping[filePath], callback);
-        } else {
-            this.loadPage(filePath, callback);
-        }
-    }
-
-    /**
-     * Tenta ler um arquivo dentro do diretorio pages 
-     * @param filePath string
-     * @returns Response
-     */
-    private loadPage(filePath: string, callback: (response: Response) => void) {
-        const parsedPath = filePath.split("/");
-        fs.readFile(path.join(this.props.rootFolder, ...parsedPath), (err, data) => {
-            if (err) {
-                callback({ status: 500, content: Buffer.from("Alguma coisa errada não está correta") });
-            } else {
-                callback({ status: 200, content: data});
-            }
-        });
-    }
-
-    private cgiBin(scriptPath: string, callback: (response: Response) => void) {
-        const result = exec(`node.exe ${path.join(this.props.cgiBinRootFolder, scriptPath)}`, (err, stdout) =>
-            callback({ status: 200, content: Buffer.from(stdout) })
-        );
     }
 }
 

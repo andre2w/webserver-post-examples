@@ -5,7 +5,7 @@ import { get, GetResultProps } from "../http-client";
  * Cria um mapeamento de uma rota para uma porta.
  * Nesse caso esperamos que todas as rotas serão mapeadas localmente
  */
-interface MappedRoute {
+export interface MappedRoute {
     matcher: RegExp,
     port: number,
     host?: string,
@@ -19,16 +19,16 @@ type Route = Pick<MappedRoute, "port" | "host">
  *                    /blog/posts/webserver.ts 
  * será mapeada para a porta 3030 como foi configurado em portMap. 
  */
-class RouteMapper {
-    constructor(private readonly mappedRoutes: MappedRoute[]) {}
+export class RouteMapper<T extends { matcher: RegExp }> {
+    constructor(private readonly mappedRoutes: T[]) {}
 
-    routeFor(url: string): Route | undefined {
+    routeFor(url: string): T | undefined {
         return this.mappedRoutes.find(route => url.match(route.matcher));
     }
 }
 
 class ReverseProxy {
-    private readonly routeMapper: RouteMapper;
+    private readonly routeMapper: RouteMapper<MappedRoute>;
     private readonly port: number;
 
     constructor(
