@@ -1,10 +1,16 @@
 import path from "path";
 import fs from "fs";
 import { exec } from "child_process";
+import { RouteMapper } from "../route-mapper";
+
+export interface CgiBinRoute {
+    matcher: RegExp; 
+    script: string;
+}
 
 export interface ServeFileProps {
     rootFolder: string,
-    cgiBinMapping: Record<string, string>,
+    cgiBinMapping: CgiBinRoute[],
     cgiBinRootFolder: string
 }
 
@@ -15,12 +21,12 @@ export interface Response {
 
 export class ServeFile {
     private readonly rootFolder: string;
-    private readonly cgiBinMapping: Record<string, string>
+    private readonly cgiBinMapping: RouteMapper<CgiBinRoute>
     private readonly cgiBinRootFolder: string;
 
     constructor(props: ServeFileProps) {
         this.rootFolder = props.rootFolder;
-        this.cgiBinMapping = props.cgiBinMapping;
+        this.cgiBinMapping = new RouteMapper<CgiBinRoute>(props.cgiBinMapping);
         this.cgiBinRootFolder = props.cgiBinRootFolder;
     }
     /**
@@ -38,8 +44,10 @@ export class ServeFile {
             return;
         } 
         
-        if (this.cgiBinMapping[filePath!] !== undefined) {
-            this.cgiBin(this.cgiBinMapping[filePath], callback);
+        const route = this.cgiBinMapping.routeFor(filePath);
+
+        if (route !== undefined) {
+            this.cgiBin(route.script, callback);
         } else {
             this.loadPage(filePath, callback);
         }

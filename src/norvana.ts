@@ -1,6 +1,6 @@
 import http, { IncomingMessage } from "http";
 import path from "path";
-import { RouteMapper } from "./reverse-proxy/reverse-proxy";
+import { RouteMapper } from "./route-mapper";
 import { ServeFile, ServeFileProps } from "./webserver/serve-file";
 import { Backend, Strategy } from "./load-balancer/strategy";
 import { get, GetResultProps } from "./http-client";
@@ -100,10 +100,10 @@ new Norvana({
     port,
     rootFolder: path.join(__dirname, "..", "pages"),
     cgiBinRootFolder: path.join(__dirname, "..", "scripts"),
-    cgiBinMapping: {
-        "/cgi-bin": "cgi-bin-test.js",
-        "/sleep": "sleep.js"
-    },
+    cgiBinMapping: [
+        { matcher: /^\/cgi-bin/, script: "cgi-bin-test.js" },
+        { matcher: /^\/sleep/, script: "sleep.js" }
+    ],
     reverseProxy: [
         { matcher: /^\/blog/, strategy }
     ]

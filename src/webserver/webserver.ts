@@ -40,9 +40,9 @@ const webserver = new Webserver({
     port,
     rootFolder: path.join(__dirname, "..", "..", "pages"),
     cgiBinRootFolder: path.join(__dirname, "..", "..", "scripts"),
-    cgiBinMapping: {
-        "/cgi-bin": "cgi-bin-test.js",
-        "/sleep": "sleep.js"
-    }
+    cgiBinMapping: [
+        { matcher: /^\/cgi-bin/, script: "cgi-bin-test.js" },
+        { matcher: /^\/sleep/, script: "sleep.js" }
+    ]
 });
 webserver.start();
